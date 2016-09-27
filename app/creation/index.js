@@ -16,7 +16,8 @@ import {
 } from 'react-native'
 
 import Icon from 'react-native-vector-icons/Ionicons'
-import Unit from '../common/Unit'
+import ProgressBar from 'ProgressBarAndroid'
+import Unit from '../common/unit'
 import CFG from '../common/config'
 
 import Detail from './detail'
@@ -59,6 +60,7 @@ class Item extends Component {
 
   render() {
     let data = this.state.data
+    console.log(this.props)
     return (
       <TouchableHighlight onPress={this.props.onSelect}>
         <View style={styles.item}>
@@ -240,12 +242,13 @@ export default class List extends Component {
     />)
   }
 
-  _onRefresh = ()=> {
+  _onRefresh = () => {
     if(this.state.isRefreshing || !this._hasMore()) return
     this._fetchData(0)
   }
 
   _loadPage(data) {
+    console.log('this.props======',this.props, data)
     this.props.navigator.push({
       name: 'detail',
       component: Detail,

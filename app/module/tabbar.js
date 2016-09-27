@@ -8,7 +8,8 @@ import {
   Text,
   TouchableHighlight,
   Dimensions,
-  Animated
+  Animated,
+  Alert
 } from 'react-native'
 
 let {width,height} = Dimensions.get('window')
@@ -120,7 +121,6 @@ export default class TabBar extends Component {
     const {x,y,width,height} = event.nativeEvent.layout;
     this.setState({layout:{x,y,width,height}});
 
-    console.log('=================', this.state.layout)
   }
   _gone(){
     return {
@@ -131,7 +131,6 @@ export default class TabBar extends Component {
 
   componentDidMount() {
     let page = this.props.defaultPage
-
     if (page >= this.props.children.length || page < 0){
       page = 0
     }
@@ -187,14 +186,14 @@ export default class TabBar extends Component {
                     <View style={styles.iconImageChangeBoxBefore} />
                     <View style={styles.iconImageChangeBoxAfter} />
                     <Image
-                      source={imgSrc}
+                      source={{uri:imgSrc}}
                       resizeMode='cover'
                       style={styles.iconImageChange}
                     />
                   </View>
                   : 
                   <Image
-                    source={imgSrc}
+                    source={{uri:imgSrc}}
                     resizeMode='cover'
                     style={styles.iconImage}
                   />
@@ -214,7 +213,7 @@ export default class TabBar extends Component {
             </View>
           </TouchableHighlight>
         )
-
+        
         if (!this.visibles[i]) {
           return null
         } else {

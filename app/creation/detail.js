@@ -20,7 +20,7 @@ import {
 import Video from 'react-native-video'
 import Icon from 'react-native-vector-icons/Ionicons'
 import Button from 'react-native-button'
-import Unit from '../common/Unit'
+import Unit from '../common/unit'
 import CFG from '../common/config'
 
 
@@ -54,10 +54,12 @@ export default class Detail extends Component {
       nextPage: 1,
       commentsData:[],
       comments:0,
+      content:'',
 
       // modal
       modalVisible: false,
       animationType: 'none',
+      isSending: false,
 
     }
 
@@ -127,15 +129,14 @@ export default class Detail extends Component {
         paused: true,
       })
     }
-
   }
+
   _resume = () => {
     if(this.state.paused){
       this.setState({
         paused: false,
       })
     }
-    
   }
 
   componentDidMount() {
@@ -174,7 +175,7 @@ export default class Detail extends Component {
     Unit.get(url, {
         accessToken: CFG.api.accessToken,
         page: page,
-        creation: 123,
+        creation: this.state.data._id,
       })
       .then((data) => {
         if(data.success){
@@ -230,6 +231,7 @@ export default class Detail extends Component {
 
   _renderHeader = () => {
     let data = this.state.data
+    console.log('_renderHeader:::',data)
     return (
       <View style={styles.listHeader}>
         <View style={styles.infoBox}>
@@ -250,6 +252,7 @@ export default class Detail extends Component {
           <View style={styles.comment}>
             <Text>来评论一下：</Text>
             <TextInput
+              ref='textInput'
               placeholder="好喜欢这个视频呀…"
               style={styles.textInput}
               multiline={true}
@@ -264,7 +267,7 @@ export default class Detail extends Component {
     )
   }
 
-  _renderFooter= ()=>{
+  _renderFooter= () => {
     if(!this._hasMore() && this.state.total !== 0) {
       return (
         <View style={styles.loadingMore}>
@@ -310,8 +313,8 @@ export default class Detail extends Component {
     this._setModalVisible(true)
   }
 
-  _blur() {
-    //
+  _blur = () => {
+    // this.refs['textInput'].blur()
   }
 
   _colseModal = () => {
@@ -321,6 +324,69 @@ export default class Detail extends Component {
   _setModalVisible(isVisible) {
     this.setState({
       modalVisible: isVisible
+    })
+    
+  }
+
+  _submit = () => {
+    let that = this
+
+    if(!that.state.content){
+      return Alert.alert('留言不能为空')
+    }
+
+    if(that.state.isSending){
+      return Alert.alert('正在评论中！'+that.state.isSending.toString())
+    }
+
+    that.setState({
+      isSending: true
+    }, () => {
+      let body = {
+          accessToken: CFG.api.accessToken,
+          creation: that.state.data._id,
+          content: that.state.content
+        }
+        , url = CFG.api.base + CFG.api.commentPost
+
+      Unit.post(url, body)
+        .then((data) => {
+          if(data && data.success){
+            let items = that.state.commentsData.slice()
+            items = [{
+              content: that.state.content,
+              replyBy: {
+                nickname:'狗狗说',
+                avatar: '"http://dummyimage.com/128X128/09071d)'
+              }
+            }].concat(items)
+
+            that.setState({
+              dataSource: that.state.dataSource.cloneWithRows(items),
+              commentsData: items,
+              total: that.state.total + 1,
+              isSending: false,
+              content:''
+            })
+
+            that._setModalVisible(false)
+
+          }else{
+            that.setState({
+              isSending: false
+            })
+            that._setModalVisible(false)
+            Alert.alert('留言失败，稍候再试。')
+          }
+        })
+        .catch((err)=>{
+          console.log(err)
+          that.setState({
+            isSending: false
+          })
+          that._setModalVisible(false)
+          Alert.alert('err:留言失败，稍候再试。')
+        })
     })
   }
 
@@ -351,7 +417,7 @@ export default class Detail extends Component {
         </View>
         <View style={styles.videoBox}>
           <View style={styles.video}>
-          {<Video
+          <Video
             ref='videoPlayer'
             // source={{uri: data.video}}
             source={url}
@@ -369,7 +435,7 @@ export default class Detail extends Component {
             onProgress={this._onProgress}
             onEnd= {this._onEnd}
             onError= {this._onError}
-          />}
+          />
           {
             !state.videoOK && <Text onPress={this._pop} style={styles.failText}>视频出错了, 抱歉。</Text>
           }
@@ -386,13 +452,13 @@ export default class Detail extends Component {
             >
               <View
                 style={styles.play}
-              >
+                >
                 <Icon
                   name="ios-play"
                   style={styles.iconPlay}
                  />
-               </View>
-               {/*<Text>重播</Text>*/}
+               <Text>重播</Text>
+              </View>
             </TouchableOpacity>
             : null
           }
@@ -432,7 +498,7 @@ export default class Detail extends Component {
           animationType={'fade'}
           visible={this.state.modalVisible}
           onRequestClose={() => this._setModalVisible(false)}
-        >
+          >
           <View style={styles.modalContainer}>
             <Icon
               onPress={this._colseModal}
@@ -443,6 +509,7 @@ export default class Detail extends Component {
               <View style={styles.comment}>
                 <Text>来评论一下：</Text>
                 <TextInput
+                  ref='textInput2'
                   placeholder="好喜欢这个视频呀…"
                   style={styles.textInput}
                   multiline={true}
@@ -669,8 +736,21 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'red',
-    borderRadius: 4,
-    color: 'red',
-  }
+    borderColor: 'yellow',
+    fontSize: 18,
+    color: '#fff',
+    backgroundColor: 'red'
+  },
+  
+  inputField:{
+    flex: 1,
+    height: 40,
+    padding:5,
+    color:'#666',
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#999',
+    backgroundColor:'#fff',
+    borderRadius:4,
+  },
 });
