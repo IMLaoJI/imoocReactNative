@@ -19,8 +19,8 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import ImagePicker from 'react-native-image-picker'
 import Button from 'react-native-button'
 
-// import * as Progress from 'react-native-progress'
-// import ProgressBar from 'ProgressBarAndroid'
+import * as Progress from 'react-native-progress'
+
 import sha1 from 'sha1'
 import Unit from '../common/unit'
 import CFG from '../common/config'
@@ -35,6 +35,7 @@ export default class Account extends Component {
       user: this.props.user || {},
       avatarProgress: 0,
       avatarUploading: false,
+      accessToken:'',
 
       modalVisible: false
     }
@@ -73,7 +74,6 @@ export default class Account extends Component {
   _submit = () => {
     let that = this
       , user = that.state.user
-    console.log('_submit',user)
     that._asyncUser()
   }
 
@@ -86,6 +86,18 @@ export default class Account extends Component {
     user[key] = value
     this.setState({
       user: user
+    })
+  }
+
+  _getQiniuToken() {
+    console.log(this.state.user)
+    let signatureURL = CFG.api.base + CFG.api.signature
+      , accessToken = this.state.user.accessToken
+    return Unit.post(signatureURL,{
+      accessToken: accessToken,
+      cloud: 'qiniu',
+    }).catch((err)=>{
+      console.log(err)
     })
   }
 
@@ -108,36 +120,46 @@ export default class Account extends Component {
 
     // Alert.alert('res.data')
     ImagePicker.showImagePicker(opts, (res) => {
+      if (res.didCancel)  return
+
       let avatarData = 'data:image/jpeg;base64,' + res.data
         , user = that.state.user
 
-      /*user.avatar = avatarData
-
-      that.setState({
-        user: user
-      })*/
-
       let timestamp = Date.now()
-        , tags = 'app, avatar'
-        , folder = 'avatar'
         , signatureURL = CFG.api.base + CFG.api.signature
-        , api_secret = ''
-        , accessToken = this.state.accessToken
+        
 
-      Unit.post(signatureURL,{
+      that._getQiniuToken()
+        .then((data) => {
+
+          if(data && data.success){
+            let token = data.data.token
+              , key =  data.data.key
+              , body =  new FormData()
+              , uri = res.uri
+
+            body.append('token', token)
+            body.append('key', key)
+            body.append('file', {
+              type: 'image/jpeg',
+              uri: uri,
+              name: key
+            })
+
+            that._upload(body)
+          }
+        })
+
+      /*Unit.post(signatureURL,{
         accessToken: accessToken,
+        key: key,
         timestamp: timestamp,
-        folder: 'avatar',
-        tags: tags
+        type:'avatar'
       }).catch((err)=>{
       }).then((data) => {
-
        
         if(data && data.success){
-          let signature = 'folder=' + folder +'&tags=' + tags + '&timestamp='+ timestamp
-          + CFG.cloudinary.api_secret
-
-          signature = sha1(signature)
+          let signature = data.data
 
           let body =  new FormData()
           body.append('folder', folder)
@@ -150,14 +172,18 @@ export default class Account extends Component {
 
           that._upload(body)
         }
-      })
+      })*/
+
     })
   }
 
-  _upload(body){
+  _upload(body) {
     let xhr =  new XMLHttpRequest()
-      , url = CFG.cloudinary.image
+      // , url = CFG.cloudinary.image
+      , url = CFG.qiniu.upload
       , that = this
+
+    console.log(body)
 
     that.setState({
       avatarUploading: true,
@@ -166,14 +192,14 @@ export default class Account extends Component {
 
     xhr.open('POST', url)
     xhr.onload = () => {
+      console.log(xhr)
       if(xhr.status !== 200){
         Alert.alert('请求失败')
-
         return
       }
 
       if(!xhr.responseText){
-        Alert.alert('请求失败')
+        Alert.alert('请求失败2')
         return
       }
 
@@ -184,10 +210,18 @@ export default class Account extends Component {
       }catch(err){
       }
 
-      if(response && response.public_id){
+      console.log('upload:====',response )
+
+      if(response){
         let user = that.state.user
 
-        user.avatar = response.public_id
+        if(response.public_id){
+          user.avatar = response.public_id
+        }
+        if(response.key){
+          user.avatar = response.key
+        }
+
         that.setState({
           user: user,
           avatarUploading: false,
@@ -213,13 +247,19 @@ export default class Account extends Component {
   }
 
   _avatar(id, type) {
-    console.log('_avatar(id, type)',id, type,  id.indexOf('http') > 1, id.indexOf('data:image') > -1)
-
+    let src = null
     if(id.indexOf('http') > -1 || id.indexOf('data:image') > -1){
-      return id
+      src = id
     }
-    console.log('CFG.cloudinary.base', CFG.cloudinary.base + '/' + type + '/upload/' + id)
-    return CFG.cloudinary.base + '/' + type + '/upload/' + id
+
+    if(id.indexOf('avatar/') > -1){
+      src = CFG.cloudinary.base + '/' + type + '/upload/' + id
+    }else{
+      src = 'http://oeqkzfns3.bkt.clouddn.com/' + id
+    }
+    
+    console.log(src)
+    return src
   }
 
   _asyncUser(isAvatar) {
@@ -255,7 +295,7 @@ export default class Account extends Component {
 
   render() {
     let user = this.state.user
-    console.log(user)
+
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -277,7 +317,14 @@ export default class Account extends Component {
             <View style={styles.avatorBox}>
               {
               this.state.avatarUploading
-              ?<Text style={{color: 'red'}}>{this.state.avatarProgress}%</Text>
+              ?
+              <Progress.Circle
+                progress={this.state.avatarProgress}
+                size={width * 0.2}
+                showsText={true}
+                color='#333'
+                borderColor='#ccc'
+              />
               :<Image
                   source={{uri: this._avatar(user.avatar, 'image')}}
                   style={styles.avatar}
@@ -291,7 +338,14 @@ export default class Account extends Component {
           <View style={styles.avatorBox}>
             {
             this.state.avatarUploading
-            ?<Text style={{color: 'red'}}>{this.state.avatarProgress}%</Text>
+            ?
+            <Progress.Circle
+              progress={this.state.avatarProgress}
+              size={width * 0.2}
+              showsText={true}
+              color='#333'
+              borderColor='#ccc'
+            />
             :<Icon name='ios-cloud-upload' style={styles.iconAvator} />
             }
           </View>
@@ -505,7 +559,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     backgroundColor: 'red'
-  },
+  }
   
   
 });

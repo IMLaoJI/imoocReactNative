@@ -9,8 +9,9 @@ module.exports = {
     },    
   },
   api:{
+    // base: 'http://rap.taobao.org/mockjs/7532/api/',
+    base: 'http://localhost:3000/api/',
     accessToken:'abc',
-    base: 'http://rap.taobao.org/mockjs/7532/api/',
     creations: 'creations',
     up: 'up',
     comment: 'comments',
@@ -19,6 +20,9 @@ module.exports = {
     verify: 'user/verify',
     update: 'user/update',
     signature: 'signature',
+  },
+  qiniu: {
+    upload: 'http://upload.qiniu.com'
   },
   cloudinary:{
     cloud_name: 'colpu',  
