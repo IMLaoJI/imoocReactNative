@@ -13,6 +13,7 @@ module.exports = {
     base: 'http://localhost:3000/api/',
     accessToken:'abc',
     creations: 'creations',
+    video: 'creations/video',
     up: 'up',
     comment: 'comments',
     commentPost: 'commentsPost',
@@ -22,7 +23,9 @@ module.exports = {
     signature: 'signature',
   },
   qiniu: {
-    upload: 'http://upload.qiniu.com'
+    upload: 'http://upload.qiniu.com',
+    testDomain: 'http://oerntli3q.bkt.clouddn.com',
+    domain: 'http://video.colpu.com'
   },
   cloudinary:{
     cloud_name: 'colpu',  

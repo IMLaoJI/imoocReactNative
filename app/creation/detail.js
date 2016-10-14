@@ -84,15 +84,17 @@ export default class Detail extends Component {
   }
 
   _onProgress = (data) => {
+    // let duration = data.seekableDuration
     let duration = data.playableDuration
       , currentTime = data.currentTime
       , precent = Number((currentTime / duration).toFixed(2))
       , states = {
         videoTotal: duration,
         currentTime: Number(data.currentTime.toFixed(2)),
-        videoProgress: precent
+        videoProgress: precent,
+        duration:data
       }
-
+    console.log(duration)
     if(!this.state.videoLoaded){
       states.videoLoaded = true
     }
@@ -109,6 +111,7 @@ export default class Detail extends Component {
       playing: false,
       // repeat: true,
     })
+    this._pause()
     console.log('_onEnd')
   }
 
@@ -121,6 +124,7 @@ export default class Detail extends Component {
 
   _rePlay = () => {
     this.refs.videoPlayer.seek(0)
+    this._resume()
   }
 
   _pause = () => {
@@ -420,10 +424,11 @@ export default class Detail extends Component {
           <Video
             ref='videoPlayer'
             // source={{uri: data.video}}
-            source={url}
+            source={{uri: 'http://video.colpu.com/d50690ec-6386-48bf-b8a0-5c1b8cca1f0b.mp4'}}
+            // source={url}
             style={styles.video}
             volume={5}
-            paused={this.state.paused}
+            paused={state.paused}
 
             rote={state.rate}
             muted={state.muted}
@@ -436,6 +441,7 @@ export default class Detail extends Component {
             onEnd= {this._onEnd}
             onError= {this._onError}
           />
+
           {
             !state.videoOK && <Text onPress={this._pop} style={styles.failText}>视频出错了, 抱歉。</Text>
           }
@@ -482,6 +488,9 @@ export default class Detail extends Component {
             <View style={[styles.progressBar,{width: width * state.videoProgress}]}></View>
           </View>
         </View>
+        <Text>{
+            JSON.stringify(state.duration)
+          }</Text>
         <ListView
           dataSource={this.state.dataSource}
           renderRow={this._renderRow}

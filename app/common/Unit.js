@@ -10,7 +10,7 @@ module.exports = {
     if(params){
       url +='?' + queryString.stringify(params)
     }
-    console.log('get===:', url)
+    // console.log('get===:', url)
     return fetch(url)
       .then((res) => res.json())
       .then((res) => Mock.mock(res))
@@ -20,7 +20,7 @@ module.exports = {
       method: 'POST',
       body: JSON.stringify(body)
     })
-    console.log('post===:', url, opts)
+    // console.log('post===:', url, opts)
     return fetch(url, opts)
       .then((res) => res.json())
       .then((res) => Mock.mock(res))

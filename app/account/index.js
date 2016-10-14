@@ -9,7 +9,6 @@ import {
   Alert,
   Dimensions,
   Modal,
-  // ProgressBarAndroid,
   AsyncStorage,
   TextInput,
   TouchableOpacity,
@@ -90,11 +89,12 @@ export default class Account extends Component {
   }
 
   _getQiniuToken() {
-    console.log(this.state.user)
     let signatureURL = CFG.api.base + CFG.api.signature
       , accessToken = this.state.user.accessToken
+
     return Unit.post(signatureURL,{
       accessToken: accessToken,
+      type: 'avatar',
       cloud: 'qiniu',
     }).catch((err)=>{
       console.log(err)
@@ -183,7 +183,7 @@ export default class Account extends Component {
       , url = CFG.qiniu.upload
       , that = this
 
-    console.log(body)
+    console.log('_upload:', body)
 
     that.setState({
       avatarUploading: true,
@@ -352,7 +352,7 @@ export default class Account extends Component {
           <Text style={styles.avatorTip}>添加我的头像</Text>
         </TouchableOpacity>
         }
-        <Text>{JSON.stringify(this.state)}</Text>
+        {/*<Text>{JSON.stringify(this.state)}</Text>*/}
         <Modal
           animateType={'fade'}
           visible={this.state.modalVisible}

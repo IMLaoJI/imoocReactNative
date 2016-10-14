@@ -4,6 +4,7 @@ import com.facebook.react.ReactActivity;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.brentvatne.react.ReactVideoPackage;
 import com.imagepicker.ImagePickerPackage;
+import com.rnim.rn.audio.ReactNativeAudioPackage;
 
 public class MainActivity extends ReactActivity {
 

@@ -16,7 +16,6 @@ import {
 } from 'react-native'
 
 import Icon from 'react-native-vector-icons/Ionicons'
-import ProgressBar from 'ProgressBarAndroid'
 import Unit from '../common/unit'
 import CFG from '../common/config'
 

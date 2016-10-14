@@ -28,7 +28,7 @@ export default class Main extends Component {
     this.state = {
       user: null,
       logined: false,
-      selectedTab:2
+      selectedTab:1
     };
   }
   componentDidMount() {
